@@ -40,7 +40,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	defer ws.Close()
 	proxy(ws)
 }
-
 func main() {
 	http.HandleFunc("/", handler)  // Or "/nConnection" to match exactly
 
@@ -50,4 +49,12 @@ func main() {
 	}
 	log.Println("Starting on :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
-}Add main.go
+	http.HandleFunc("/", handler)  // Or change to "/nConnection" if needed later
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Println("Starting on :" + port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
