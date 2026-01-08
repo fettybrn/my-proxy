@@ -32,8 +32,7 @@ func proxy(ws *websocket.Conn) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	// Restrict to exact path "/app62" to match your old payload GET /app62
-	if r.URL.Path != "/app62" {
+	if r.URL.Path != "/nConnection" {
 		http.NotFound(w, r)
 		return
 	}
@@ -49,19 +48,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Only handle the specific upgrade path from your payload
-	http.HandleFunc("/app62", handler)
+	http.HandleFunc("/nConnection", handler)
 
-	// Optional: Handle root with 404 to avoid wrong requests
+	// Optional: 404 everything else
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Println("Starting server on :" + port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	// Rest of main unchanged...
 }
