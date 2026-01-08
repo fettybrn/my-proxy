@@ -15,8 +15,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func proxy(ws *websocket.Conn) {
-	// Change this target if needed (common ones: "youtube.com:443", "www.google.com:443", "play.googleapis.com:443")
-	target := "youtube.com:443"
+	// This matches your old [Remote Proxy]: www.google.com:443
+	// (the websocket tunnel forwards all traffic here)
+	target := "www.google.com:443"
 
 	conn, err := net.Dial("tcp", target)
 	if err != nil {
@@ -25,14 +26,17 @@ func proxy(ws *websocket.Conn) {
 	}
 	defer conn.Close()
 
-	// Bidirectional copy between websocket and TCP connection
+	// Bidirectional piping
 	go io.Copy(conn, ws.UnderlyingConn())
 	go io.Copy(ws.UnderlyingConn(), conn)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	// Optional: Restrict to specific path if your config expects it (e.g., "/nConnection" or "/app2")
-	// if r.URL.Path != "/nConnection" { http.NotFound(w, r); return }
+	// Restrict to exact path "/app62" to match your old payload GET /app62
+	if r.URL.Path != "/app62" {
+		http.NotFound(w, r)
+		return
+	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -45,8 +49,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Handle root path (change "/" to "/nConnection" if your old config requires a specific path)
-	http.HandleFunc("/", handler)
+	// Only handle the specific upgrade path from your payload
+	http.HandleFunc("/app62", handler)
+
+	// Optional: Handle root with 404 to avoid wrong requests
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
